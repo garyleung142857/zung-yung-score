@@ -1,0 +1,15 @@
+{
+  "name": "zung-jung-score",
+  "version": "1.0.0",
+  "description": "Calculate scores of winning hands for zung-jung mahjong.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "typescript": "^5.0.4"
+  }
+}
