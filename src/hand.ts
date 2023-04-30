@@ -64,7 +64,7 @@ class Call implements ICall {
   constructor(callType: string, tiles: string[]) {
     // TODO: Add validity check
     this.callType = CallType[callType]
-    this.tiles = tiles.map(tile => new Tile(tile))
+    this.tiles = tiles.map(tileStr => new Tile(tileStr))
     this.isConcealed = [CallType.Tsumo, CallType.Ckan].includes(this.callType)
     this.isTriplet = [CallType.Pon, CallType.Kan, CallType.Ckan].includes(this.callType)
     this.isKan = [CallType.Pon, CallType.Kan, CallType.Ckan].includes(this.callType)
@@ -72,9 +72,30 @@ class Call implements ICall {
   }
 }
 
+class Analysis {
+
+}
+
 interface IQuery {
-  seat: number
+  seat: Seat
   hand: Tile[]
   calls: Call[]
   extra: ExtraYaku[]
+  solve: () => Analysis[]
+}
+
+class Query implements IQuery {
+  seat: Seat
+  hand: Tile[]
+  calls: Call[]
+  extra: ExtraYaku[]
+  constructor (seat: Seat, hand: string[], calls: Call[], extra: ExtraYaku[]) {
+    this.seat = seat
+    this.hand = hand.map(tileStr => new Tile(tileStr))
+    this.calls = calls
+    this.extra = extra
+  }
+  solve: () => {
+    
+  }
 }
