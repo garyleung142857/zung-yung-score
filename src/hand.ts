@@ -10,8 +10,8 @@ enum Seat {
 }
 
 enum CallType {
-  Tsumo = 1,
-  Ron = 2,
+  // Tsumo = 1,
+  // Ron = 2,
   Chii = 3,
   Pon = 4,
   Kan = 5,
@@ -51,7 +51,6 @@ export class Tile implements ITile {
 interface ICall {
   callType: CallType
   tiles: Tile[]
-  isWinningTile: () => boolean
 }
 
 export class Call implements ICall {
@@ -62,9 +61,6 @@ export class Call implements ICall {
     this.callType = callType
     this.tiles = tiles.map(tileStr => new Tile(tileStr))
   }
-  isWinningTile() {
-    return [CallType.Tsumo, CallType.Ron].includes(this.callType)
-  }
 }
 
 class Analysis {
@@ -74,6 +70,8 @@ class Analysis {
 interface IQuery {
   seat: Seat
   hand: Tile[]
+  winTile: Tile
+  isTsumo: boolean
   calls: Call[]
   extra: ExtraYaku[]
 }
@@ -81,16 +79,19 @@ interface IQuery {
 export class Query implements IQuery {
   seat: Seat
   hand: Tile[]
+  winTile: Tile
+  isTsumo: boolean
   calls: Call[]
   extra: ExtraYaku[]
-  constructor (seat: Seat, hand: string[], calls: Call[], extra: ExtraYaku[]) {
+  constructor (seat: Seat, hand: string[], winTile: Tile, isTsumo: boolean, calls: Call[], extra: ExtraYaku[]) {
     this.seat = seat
     this.hand = hand.map(tileStr => new Tile(tileStr))
+    this.winTile = winTile
+    this.isTsumo = isTsumo
     this.calls = calls
     this.extra = extra
   }
   mobileTiles() {
-    const winningTile = this.calls.find(call => call.isWinningTile())!.tiles[0]
-    return [...this.hand, winningTile]
+    return [...this.hand, this.winTile]
   }
 }
