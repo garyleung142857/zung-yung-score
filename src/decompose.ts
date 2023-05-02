@@ -1,5 +1,15 @@
 import { Query, Tile, Call } from "./hand.ts";
 
+const TERMINALS19 = [
+  new Tile('1m'), new Tile('9m'), new Tile('1p'), new Tile('9p'), new Tile('1s'), new Tile('9s')
+]
+
+const HONORS = [
+  new Tile('1z'), new Tile('2z'), new Tile('3z'), new Tile('4z'), new Tile('5z'), new Tile('6z'), new Tile('7z')
+]
+
+const TERMINALS = [...TERMINALS19, ...HONORS]
+
 enum GroupType {
   Chii = 3,
   Pon = 4,
@@ -42,20 +52,37 @@ class Group implements IGroup {
   isKan() {
     return [GroupType.Kan, GroupType.Ckan].includes(this.groupType)
   }
-
 }
 
 const pattern13Terminals = (query: Query): Shape[] => {
   // check if the Query can win with 13 terminals
-  if (query.hand.length !== 13) return []
-  const wholeHand = query.mobileTiles()
-  const terminals = [
-    '1m', '9m', '1p', '9p', '1s', '9s', '1z', '2z', '3z', '4z', '5z', '6z', '7z'
-  ]
-  const cnts = terminals.map(tileStr => wholeHand.filter(tile => tile.tileStr === tileStr).length)
-  if (Math.min(...cnts) === 0) return []
-  const group = new Group(GroupType.Kokushi, wholeHand)
+  const mobileTiles = query.mobileTiles()
+  if (mobileTiles.length !== 14) return []
+  for (let terminal of TERMINALS) {
+    if (mobileTiles.find(tile => tile.equals(terminal)) === undefined) {
+      return []
+    }
+  }
+  const group = new Group(GroupType.Kokushi, mobileTiles)
   return [new Shape([group])]
 }
 
-export {pattern13Terminals}
+const pattern7pairs = (query: Query): Shape[] => {
+  let mobileTiles = query.mobileTiles()
+  if (mobileTiles.length !== 14) return []
+  let groups = []
+  while (mobileTiles.length > 0) {
+    const t = mobileTiles.pop()
+    const idx = mobileTiles.findIndex(tile => tile.equals(t!))
+    if (idx === -1) return []
+    groups.push(new Group(GroupType.Pair, [t!, t!]))
+    mobileTiles.splice(idx, 1)
+  }
+  return [new Shape(groups)]
+}
+
+
+export {
+  pattern13Terminals,
+  pattern7pairs
+}

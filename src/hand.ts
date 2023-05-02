@@ -31,7 +31,6 @@ interface ITile {
   tileStr: string
   suit: Suit
   rank: Rank
-  isTerminal: () => boolean
 }
 
 export class Tile implements ITile {
@@ -43,8 +42,11 @@ export class Tile implements ITile {
     this.suit = <Suit>tileStr[1]
     this.rank = <Rank>tileStr[0]
   }
-  isTerminal() {
-    return this.suit === "z" || ["1", "9"].includes(this.rank)
+  equals(other: Tile) {
+    return this.tileStr === other.tileStr
+  }
+  isMemberOf(tiles: Tile[]) {
+    return tiles.find(t => t.equals(this)) === undefined
   }
 }
 
@@ -93,5 +95,8 @@ export class Query implements IQuery {
   }
   mobileTiles() {
     return [...this.hand, this.winTile]
+  }
+  isConcealed() {
+    return this.calls.filter(call => call.callType !== CallType.Ckan).length === 0
   }
 }
