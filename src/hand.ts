@@ -28,15 +28,18 @@ enum ExtraYaku {
 }
 
 interface ITile {
+  tileStr: string
   suit: Suit
   rank: Rank
   isTerminal: () => boolean
 }
 
-class Tile implements ITile {
+export class Tile implements ITile {
+  tileStr: string
   suit: Suit
   rank: Rank
   constructor(tileStr: string) {
+    this.tileStr = tileStr
     this.suit = <Suit>tileStr[1]
     this.rank = <Rank>tileStr[0]
   }
@@ -48,27 +51,19 @@ class Tile implements ITile {
 interface ICall {
   callType: CallType
   tiles: Tile[]
-  isConcealed: boolean
-  isTriplet: boolean
-  isKan: boolean
-  isWinningTile: boolean
+  isWinningTile: () => boolean
 }
 
-class Call implements ICall {
+export class Call implements ICall {
   callType: CallType
   tiles: Tile[]
-  isConcealed: boolean
-  isTriplet: boolean
-  isKan: boolean
-  isWinningTile: boolean
-  constructor(callType: string, tiles: string[]) {
+  constructor(callType: CallType, tiles: string[]) {
     // TODO: Add validity check
-    this.callType = CallType[callType]
+    this.callType = callType
     this.tiles = tiles.map(tileStr => new Tile(tileStr))
-    this.isConcealed = [CallType.Tsumo, CallType.Ckan].includes(this.callType)
-    this.isTriplet = [CallType.Pon, CallType.Kan, CallType.Ckan].includes(this.callType)
-    this.isKan = [CallType.Pon, CallType.Kan, CallType.Ckan].includes(this.callType)
-    this.isWinningTile = [CallType.Tsumo, CallType.Ron].includes(this.callType)
+  }
+  isWinningTile() {
+    return [CallType.Tsumo, CallType.Ron].includes(this.callType)
   }
 }
 
@@ -81,10 +76,9 @@ interface IQuery {
   hand: Tile[]
   calls: Call[]
   extra: ExtraYaku[]
-  solve: () => Analysis[]
 }
 
-class Query implements IQuery {
+export class Query implements IQuery {
   seat: Seat
   hand: Tile[]
   calls: Call[]
@@ -95,7 +89,8 @@ class Query implements IQuery {
     this.calls = calls
     this.extra = extra
   }
-  solve: () => {
-    
+  mobileTiles() {
+    const winningTile = this.calls.find(call => call.isWinningTile())!.tiles[0]
+    return [...this.hand, winningTile]
   }
 }
