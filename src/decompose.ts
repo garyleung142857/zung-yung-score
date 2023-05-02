@@ -11,12 +11,13 @@ const HONORS = [
 const TERMINALS = [...TERMINALS19, ...HONORS]
 
 enum GroupType {
-  Chii = 3,
-  Pon = 4,
+  UNSET = 0,
+  Sequence = 3,
+  Triplet = 4,
   Kan = 5,
   Ckan = 6,
-  Sequence = 7,
-  Triplet = 8,
+  Csequence = 7, // ocncealed sequence
+  Ctriplet = 8, // concealed triplet
   Pair = 9,
   Kokushi = 10
 }
@@ -44,10 +45,10 @@ class Group implements IGroup {
     this.tiles = tiles
   }
   isConcealed() {
-    return [GroupType.Sequence, GroupType.Triplet, GroupType.Pair, GroupType.Kokushi].includes(this.groupType)
+    return [GroupType.Csequence, GroupType.Ctriplet, GroupType.Pair, GroupType.Kokushi].includes(this.groupType)
   }
   isTriplet() {
-    return [GroupType.Pon, GroupType.Kan, GroupType.Ckan].includes(this.groupType)
+    return [GroupType.Triplet, GroupType.Ctriplet, GroupType.Kan, GroupType.Ckan].includes(this.groupType)
   }
   isKan() {
     return [GroupType.Kan, GroupType.Ckan].includes(this.groupType)
@@ -81,8 +82,36 @@ const pattern7pairs = (query: Query): Shape[] => {
   return [new Shape(groups)]
 }
 
+const patternStandard = (query: Query): Shape[] => {
+  let mobileTiles = query.mobileTiles()
+  if (mobileTiles.length + query.calls.length * 3 !== 14) return []
+  let mTilesBySuits: number[][] = ['m', 'p', 's', 'z'].map(suit => {
+    const tileOfSuit = mobileTiles.filter(tile => tile.suit === suit)
+    let arr = new Array(suit === 'z' ? 7 : 9).fill(0)
+    tileOfSuit.forEach(tile => {
+      const idx = Number(tile.rank) - 1
+      arr[idx] += 1
+    })
+    return arr
+  })
+
+  const suitLengthsMod3: number[] = mTilesBySuits.map(suit => {
+    return suit.reduce((a, b) => a + b, 0) % 3
+  })
+
+  if (suitLengthsMod3.indexOf(1) !== -1 || suitLengthsMod3.filter(len => len === 2).length > 1) {
+    return []
+  }
+
+
+  
+  console.log(mTilesBySuits)
+  return []
+}
+
 
 export {
   pattern13Terminals,
-  pattern7pairs
+  pattern7pairs,
+  patternStandard
 }
