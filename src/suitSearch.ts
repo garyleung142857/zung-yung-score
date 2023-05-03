@@ -1,56 +1,58 @@
-
-enum MobileGroupType {
+export enum MobileGroupType {
   Sequence = 1,
   Triplet = 2,
   Pair = 3
 }
 
-class MobileGroup {
+export class MobileGroup {
   type: MobileGroupType
-  rank: string
-  constructor(type: MobileGroupType, rank: string) {
+  tileNames: string[]
+  constructor(type: MobileGroupType, tileNames: string[]) {
     this.type = type
-    this.rank = rank
+    this.tileNames = tileNames
   }
 }
 
-class SuitSolution {
+export class SuitSolution {
+  suit: string
   groups: MobileGroup[]
-  constructor(groups: MobileGroup[] = []) {
+  constructor(suit: string, groups: MobileGroup[] = []) {
+    this.suit = suit
     this.groups = groups
   }
 }
 
 const RANKS: string[] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+let suit: string
 
+export const searchSuitPatterns = (ranks_: number[], suit_: string): SuitSolution[] => {
+  let ranks = [...ranks_]
+  suit = suit_
+  if (suitLen(ranks) === 0) return [new SuitSolution(suit)]
+  if (suitLen(ranks) % 3 === 1) return []
 
-export const searchSuitPatterns = (suit_: number[], isHonour: boolean = false): SuitSolution[] => {
-  let suit = [...suit_]
-  if (suitLen(suit) === 0) return [new SuitSolution()]
-  if (suitLen(suit) % 3 === 1) return []
-
-  if (isHonour) {
+  if (suit === "z") {
     let res: MobileGroup[] = []
-    if (suitLen(suit) % 3 === 2){
-      const pairIdx = suit.indexOf(2)
+    if (suitLen(ranks) % 3 === 2){
+      const pairIdx = ranks.indexOf(2)
       if (pairIdx === -1) return []
-      const pairGroup = new MobileGroup(MobileGroupType.Pair, RANKS[pairIdx])
+      const pairGroup = new MobileGroup(MobileGroupType.Pair, [RANKS[pairIdx] + suit])
       res.push(pairGroup)
-      suit[pairIdx] -= 2
+      ranks[pairIdx] -= 2
     }
-    res.push(...exhaustHonour(suit))
+    res.push(...exhaustHonour(ranks))
     if (res.length === 0) return []
-    return [new SuitSolution(res)]
+    return [new SuitSolution(suit, res)]
   } else {
-    if (suitLen(suit) % 3 === 2){
+    if (suitLen(ranks) % 3 === 2){
       let pairsRes: MobileGroup[][] = []
-      for (let i = 0; i < suit.length; i++) {
-        if (suit[i] >= 2) {
-          let suitReducedPair = [...suit]
+      for (let i = 0; i < ranks.length; i++) {
+        if (ranks[i] >= 2) {
+          let suitReducedPair = [...ranks]
           suitReducedPair[i] -= 2
           let res: MobileGroup[][] = exhaust(suitReducedPair)
           
-          let pairGroup = new MobileGroup(MobileGroupType.Pair, RANKS[i])
+          let pairGroup = new MobileGroup(MobileGroupType.Pair, [RANKS[i] + suit])
 
           if (res.length > 0) {
             res.forEach(r => r.push(pairGroup))
@@ -59,39 +61,39 @@ export const searchSuitPatterns = (suit_: number[], isHonour: boolean = false): 
         }
       }
       if (pairsRes.length === 0) return []
-      return pairsRes.map(r => new SuitSolution(r))
+      return pairsRes.map(r => new SuitSolution(suit, r))
     } else {
-      let res: MobileGroup[][] = exhaust(suit)
+      let res: MobileGroup[][] = exhaust(ranks)
       if(res.length === 0) return []
-      return res.filter(r => r.length > 0).map(r => new SuitSolution(r))
+      return res.filter(r => r.length > 0).map(r => new SuitSolution(suit, r))
     }
   }
 }
 
-const exhaustHonour = (suit: number[]): MobileGroup[] => {
+const exhaustHonour = (ranks: number[]): MobileGroup[] => {
   let res: MobileGroup[] = []
-  for (let i = 0; i < suit.length; i++) {
-    if (suit[i] % 3 !== 0) return []
-    if (suit[i] === 3) {
-      let honourTripplet = new MobileGroup(MobileGroupType.Triplet, RANKS[i])
+  for (let i = 0; i < ranks.length; i++) {
+    if (ranks[i] % 3 !== 0) return []
+    if (ranks[i] === 3) {
+      let honourTripplet = new MobileGroup(MobileGroupType.Triplet, [RANKS[i] + suit])
       res.push(honourTripplet)
     }
   }
   return res
 }
 
-const exhaust = (suit: number[], i = 0): MobileGroup[][] => {
-  if (suit.length === 0) return [[]]
+const exhaust = (ranks: number[], i = 0): MobileGroup[][] => {
+  if (ranks.length === 0) return [[]]
   let res: MobileGroup[][] = []
-  const originalRes = exhaustSequences(suit)
+  const originalRes = exhaustSequences(ranks)
   if (originalRes !== null) {
     res.push(originalRes)
   }
-  while (i < suit.length) {
-    if (suit[i] >= 3) {
-      let residual = [...suit]
+  while (i < ranks.length) {
+    if (ranks[i] >= 3) {
+      let residual = [...ranks]
       residual[i] -= 3
-      let trippletGroup: MobileGroup = new MobileGroup(MobileGroupType.Triplet, RANKS[i])
+      let trippletGroup: MobileGroup = new MobileGroup(MobileGroupType.Triplet, [RANKS[i] + suit])
       let removeTrippletRes = exhaust(residual, i + 1)
       if (removeTrippletRes !== null) {
         removeTrippletRes.forEach(r => r.push(trippletGroup))
@@ -103,27 +105,27 @@ const exhaust = (suit: number[], i = 0): MobileGroup[][] => {
   return res
 }
 
-const exhaustSequences = (suit: number[]): MobileGroup[] | null => {
-  let suit_ = [...suit]
+const exhaustSequences = (ranks_: number[]): MobileGroup[] | null => {
+  let ranks = [...ranks_]
   let groups_: MobileGroup[] = []
   let i = 0
-  while(i < suit.length - 2) {
-    if (suit_[i] === 0) {
+  while(i < ranks.length - 2) {
+    if (ranks[i] === 0) {
       i++
       continue
     }
-    if (suit_[i + 1] === 0 || suit_[i + 2] === 0) return null
+    if (ranks[i + 1] === 0 || ranks[i + 2] === 0) return null
     groups_.push(new MobileGroup(
       MobileGroupType.Sequence, 
-      ''.concat(RANKS[i], RANKS[i + 1], RANKS[i + 2])
-    ))
-    suit_[i]--
-    suit_[i + 1]--
-    suit_[i + 2]--
+      [RANKS[i] + suit, RANKS[i + 1] + suit, RANKS[i + 2] + suit])
+    )
+    ranks[i]--
+    ranks[i + 1]--
+    ranks[i + 2]--
   }
   return groups_
 }
 
-const suitLen = (suit: number[]) => {
-  return suit.reduce((a, b) => a + b, 0)
+const suitLen = (ranks: number[]) => {
+  return ranks.reduce((a, b) => a + b, 0)
 }

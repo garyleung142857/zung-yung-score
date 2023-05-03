@@ -1,6 +1,5 @@
-import { Query, Tile, Call } from "./hand.ts";
-import { searchSuitPatterns } from "./suitSearch.ts";
-
+import { Query, Tile, Call, CallType } from "./hand.ts";
+import { SuitSolution, searchSuitPatterns, MobileGroup, MobileGroupType } from "./suitSearch.ts";
 
 const TERMINALS19 = [
   new Tile('1m'), new Tile('9m'), new Tile('1p'), new Tile('9p'), new Tile('1s'), new Tile('9s')
@@ -11,6 +10,8 @@ const HONORS = [
 ]
 
 const TERMINALS = [...TERMINALS19, ...HONORS]
+
+const SUITS = ['m', 'p', 's', 'z']
 
 enum GroupType {
   UNSET = 0,
@@ -34,16 +35,25 @@ interface IGroup {
 
 class Shape {
   groups: Group[]
-  constructor(groups: Group[]){
+  constructor(groups: Group[] = []){
     this.groups = groups
+  }
+  addGroup(group: Group) {
+    this.groups.push(group)
   }
 }
 
 class Group implements IGroup {
   groupType: GroupType
   tiles: Tile[]
-  constructor(groupType: GroupType, tiles: Tile[]){
+  constructor(groupType: GroupType = GroupType.UNSET, tiles: Tile[] = []){
     this.groupType = groupType
+    this.tiles = tiles
+  }
+  setGroupType(groupType: GroupType) {
+    this.groupType = groupType
+  }
+  setTiles(tiles: Tile[]) {
     this.tiles = tiles
   }
   isConcealed() {
@@ -102,7 +112,7 @@ function cartesian(...args: any) {
 const patternStandard = (query: Query): Shape[] => {
   let mobileTiles = query.mobileTiles()
   if (mobileTiles.length + query.calls.length * 3 !== 14) return []
-  const mTilesBySuits: number[][] = ['m', 'p', 's', 'z'].map(suit => {
+  const mTilesBySuits: number[][] = SUITS.map(suit => {
     const tileOfSuit = mobileTiles.filter(tile => tile.suit === suit)
     let arr = new Array(suit === 'z' ? 7 : 9).fill(0)
     tileOfSuit.forEach(tile => {
@@ -112,16 +122,96 @@ const patternStandard = (query: Query): Shape[] => {
     return arr
   })
 
-  const searchResBySuits = [
-    searchSuitPatterns(mTilesBySuits[0], false),
-    searchSuitPatterns(mTilesBySuits[1], false),
-    searchSuitPatterns(mTilesBySuits[2], false),
-    searchSuitPatterns(mTilesBySuits[3], true),
-  ]
+  // All possible decomposition of the mobile tiles in TileCount[][] format
+  const mobileGroupsRes: MobileGroup[][] = cartesian(
+    searchSuitPatterns(mTilesBySuits[0], 'm'),
+    searchSuitPatterns(mTilesBySuits[1], 'p'),
+    searchSuitPatterns(mTilesBySuits[2], 's'),
+    searchSuitPatterns(mTilesBySuits[3], 'z'),
+  ).map(suitSolutions => suitSolutions.flatMap(
+    (suitSolution: SuitSolution) => suitSolution.groups
+  ))
 
-  console.log(cartesian(...searchResBySuits))
+  // exhaust patterns with awareness on winning tile and calls
+  let patterns: Shape[] = []
 
-  return []
+  const settleMobileGroup = (mg: MobileGroup, closed: boolean = true): Group => {
+    let group = new Group()
+
+    switch (mg.type) {
+      case MobileGroupType.Pair:
+        group.setTiles([new Tile(mg.tileNames[0]), new Tile(mg.tileNames[0])])
+        group.setGroupType(GroupType.Pair)
+        break
+      case MobileGroupType.Triplet:
+        group.setTiles([new Tile(mg.tileNames[0]), new Tile(mg.tileNames[0]), new Tile(mg.tileNames[0])])
+        group.setGroupType(closed ? GroupType.Ctriplet : GroupType.Triplet)
+        break
+      case MobileGroupType.Sequence:
+        group.setTiles([new Tile(mg.tileNames[0]), new Tile(mg.tileNames[1]), new Tile(mg.tileNames[2])])
+        group.setGroupType(closed ? GroupType.Csequence : GroupType.Sequence)
+    }
+
+    return group
+  }
+
+  const settleCall = (call: Call): Group => {
+    let group = new Group()
+    group.setTiles(call.tiles)
+
+    switch (call.callType) {
+      case CallType.Chii:
+        group.setGroupType(GroupType.Sequence)
+        break
+      case CallType.Pon:
+        group.setGroupType(GroupType.Triplet)
+        break
+      case CallType.Kan:
+        group.setGroupType(GroupType.Kan)
+        break
+      case CallType.Ckan:
+        group.setGroupType(GroupType.Ckan)
+        break
+    }
+    
+    return group
+  }
+
+  const allSol = mobileGroupsRes.flatMap((res: MobileGroup[]) => {
+    let shapes: Shape[] = []
+
+    // if (suitSol.suit !== query.winTile.suit) {
+    //   return [suitSol.groups.map(group => settleMobileGroup(suitSol.suit, group, true))]
+    // }
+    // let winTileSuitGroups: Group[][] = []
+
+    const groupsWithWinTile = res.filter(g => g.tileNames.includes(query.winTile.tileStr))
+    const groupsWithoutWinTile = res.filter(g => !g.tileNames.includes(query.winTile.tileStr))
+
+    for (let i = 0; i < groupsWithWinTile.length; i++) {
+      let shape = new Shape()
+      shape.addGroup(settleMobileGroup(groupsWithWinTile[i], query.isTsumo))
+      for (let j = 0; j < groupsWithWinTile.length; j++) {
+        if (i === j) continue
+        shape.addGroup(settleMobileGroup(groupsWithWinTile[j], true))
+      }
+      
+      shapes.push(shape)
+    }
+    
+    shapes.forEach(shape => {
+      groupsWithoutWinTile.forEach(g => {
+        shape.addGroup(settleMobileGroup(g, true))
+      })
+      query.calls.forEach(call => {
+        shape.addGroup(settleCall(call))
+      })
+    })
+
+    return shapes
+  })
+
+  return allSol
 }
 
 

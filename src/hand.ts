@@ -9,7 +9,7 @@ enum Seat {
   NORTH = 4
 }
 
-enum CallType {
+export enum CallType {
   // Tsumo = 1,
   // Ron = 2,
   Chii = 3,

@@ -1,4 +1,4 @@
-import { Query, Tile, Call } from "./src/hand";
+import { Query, Tile, Call, CallType } from "./src/hand";
 import { pattern13Terminals, pattern7pairs, patternStandard } from "./src/decompose";
 import { searchSuitPatterns } from "./src/suitSearch"
 
@@ -24,6 +24,14 @@ const query3 = new Query({
 })
 
 
+const query4 = new Query({
+  hand: [
+    '2s', '2s', '3s', '3s', '4s', '4s', '5s'
+  ],
+  winTile: new Tile('5s'),
+  calls: [new Call(CallType.Ckan, ['1z', '1z', '1z', '1z']), new Call(CallType.Chii, ['5s', '6s', '7s'])]
+})
+
 // let suit = [0, 2, 2, 2, 2, 0, 0, 0, 0]
 // let sol = searchSuitPatterns(suit, false)
 // sol?.forEach(s => {
@@ -31,10 +39,11 @@ const query3 = new Query({
 // })
 // console.log(sol?.length)
 
-// console.log(pattern13Terminals(query).map(shape => shape.groups))
-// console.log(pattern7pairs(query2).map(shape => shape.groups))
+console.log(pattern13Terminals(query).map(shape => shape.groups))
+console.log(pattern7pairs(query2).map(shape => shape.groups))
 
-// console.log(patternStandard(query))
-// console.log(patternStandard(query2))
+const shapes3 = patternStandard(query3)
+shapes3.forEach(s => console.log(s.groups))
 
-console.log(patternStandard(query3))
+const shapes4 = patternStandard(query3)
+shapes4.forEach(s => console.log(s.groups))
