@@ -114,6 +114,9 @@ export class Query implements IQuery {
   mobileTiles() {
     return [...this.hand, this.winTile]
   }
+  allTiles() {
+    return [...this.hand, this.winTile, ...this.calls.flatMap(call => call.tiles)]
+  }
   isConcealed() {
     return this.calls.filter(call => call.callType !== CallType.Ckan).length === 0
   }

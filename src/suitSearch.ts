@@ -1,3 +1,5 @@
+import { RANKS } from "./constants"
+
 export enum MobileGroupType {
   Sequence = 1,
   Triplet = 2,
@@ -22,7 +24,6 @@ export class SuitSolution {
   }
 }
 
-const RANKS: string[] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
 let suit: string
 
 export const searchSuitPatterns = (ranks_: number[], suit_: string): SuitSolution[] => {

@@ -1,17 +1,6 @@
 import { Query, Tile, Call, CallType } from "./hand.ts";
 import { SuitSolution, searchSuitPatterns, MobileGroup, MobileGroupType } from "./suitSearch.ts";
-
-const TERMINALS19 = [
-  new Tile('1m'), new Tile('9m'), new Tile('1p'), new Tile('9p'), new Tile('1s'), new Tile('9s')
-]
-
-const HONORS = [
-  new Tile('1z'), new Tile('2z'), new Tile('3z'), new Tile('4z'), new Tile('5z'), new Tile('6z'), new Tile('7z')
-]
-
-const TERMINALS = [...TERMINALS19, ...HONORS]
-
-const SUITS = ['m', 'p', 's', 'z']
+import { TERMINALS, SUITS } from "./constants.ts";
 
 enum GroupType {
   UNSET = 0,
@@ -29,6 +18,7 @@ interface IGroup {
   groupType: GroupType
   tiles: Tile[]
   isConcealed: () => boolean
+  isSequence: () => boolean
   isTriplet: () => boolean
   isKan: () => boolean
 }
@@ -59,6 +49,9 @@ class Group implements IGroup {
   isConcealed() {
     return [GroupType.Csequence, GroupType.Ctriplet, GroupType.Pair, GroupType.Kokushi].includes(this.groupType)
   }
+  isSequence() {
+    return [GroupType.Csequence, GroupType.Sequence].includes(this.groupType)
+  } 
   isTriplet() {
     return [GroupType.Triplet, GroupType.Ctriplet, GroupType.Kan, GroupType.Ckan].includes(this.groupType)
   }
@@ -207,9 +200,16 @@ const patternStandard = (query: Query): Shape[] => {
   return allSol
 }
 
+const patternAll = (query: Query): Shape[] => {
+  return [pattern13Terminals, pattern7pairs, patternStandard].flatMap(func => func(query))
+}
 
 export {
   pattern13Terminals,
   pattern7pairs,
-  patternStandard
+  patternStandard,
+  patternAll,
+  Shape,
+  Group,
+  GroupType
 }
