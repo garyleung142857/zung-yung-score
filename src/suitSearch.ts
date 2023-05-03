@@ -24,22 +24,22 @@ class SuitSolution {
 const RANKS: string[] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
 
-export const searchSuitPatterns = (suit_: number[], isHonour: boolean = false): SuitSolution[] | null => {
+export const searchSuitPatterns = (suit_: number[], isHonour: boolean = false): SuitSolution[] => {
   let suit = [...suit_]
-  if (suitLen(suit) === 0) return []
-  if (suitLen(suit) % 3 === 1) return null
+  if (suitLen(suit) === 0) return [new SuitSolution()]
+  if (suitLen(suit) % 3 === 1) return []
 
   if (isHonour) {
     let res: MobileGroup[] = []
     if (suitLen(suit) % 3 === 2){
       const pairIdx = suit.indexOf(2)
-      if (pairIdx === -1) return null
+      if (pairIdx === -1) return []
       const pairGroup = new MobileGroup(MobileGroupType.Pair, RANKS[pairIdx])
       res.push(pairGroup)
       suit[pairIdx] -= 2
     }
     res.push(...exhaustHonour(suit))
-    if (res.length === 0) return null
+    if (res.length === 0) return []
     return [new SuitSolution(res)]
   } else {
     if (suitLen(suit) % 3 === 2){
@@ -51,22 +51,21 @@ export const searchSuitPatterns = (suit_: number[], isHonour: boolean = false): 
           let res: MobileGroup[][] = exhaust(suitReducedPair)
           
           let pairGroup = new MobileGroup(MobileGroupType.Pair, RANKS[i])
-          res = res.filter(r => r.length > 0)
+
           if (res.length > 0) {
             res.forEach(r => r.push(pairGroup))
             pairsRes.push(...res)
           }
         }
       }
-      if (pairsRes.length === 0) return null
+      if (pairsRes.length === 0) return []
       return pairsRes.map(r => new SuitSolution(r))
     } else {
       let res: MobileGroup[][] = exhaust(suit)
-      if(res.length === 0) return null
+      if(res.length === 0) return []
       return res.filter(r => r.length > 0).map(r => new SuitSolution(r))
     }
   }
-
 }
 
 const exhaustHonour = (suit: number[]): MobileGroup[] => {
@@ -82,6 +81,7 @@ const exhaustHonour = (suit: number[]): MobileGroup[] => {
 }
 
 const exhaust = (suit: number[], i = 0): MobileGroup[][] => {
+  if (suit.length === 0) return [[]]
   let res: MobileGroup[][] = []
   const originalRes = exhaustSequences(suit)
   if (originalRes !== null) {

@@ -1,4 +1,6 @@
 import { Query, Tile, Call } from "./hand.ts";
+import { searchSuitPatterns } from "./suitSearch.ts";
+
 
 const TERMINALS19 = [
   new Tile('1m'), new Tile('9m'), new Tile('1p'), new Tile('9p'), new Tile('1s'), new Tile('9s')
@@ -16,7 +18,7 @@ enum GroupType {
   Triplet = 4,
   Kan = 5,
   Ckan = 6,
-  Csequence = 7, // ocncealed sequence
+  Csequence = 7, // concealed sequence
   Ctriplet = 8, // concealed triplet
   Pair = 9,
   Kokushi = 10
@@ -82,10 +84,25 @@ const pattern7pairs = (query: Query): Shape[] => {
   return [new Shape(groups)]
 }
 
+function cartesian(...args: any) {
+  let r: any[] = []
+  let max = args.length - 1
+  function helper(arr: any[], i: number) {
+    for (let j = 0, l = args[i].length; j < l; j++) {
+      var a = arr.slice(0); // clone arr
+      a.push(args[i][j])
+      if (i === max) r.push(a);
+      else helper(a, i + 1)
+    }
+  }
+  helper([], 0);
+  return r
+}
+
 const patternStandard = (query: Query): Shape[] => {
   let mobileTiles = query.mobileTiles()
   if (mobileTiles.length + query.calls.length * 3 !== 14) return []
-  let mTilesBySuits: number[][] = ['m', 'p', 's', 'z'].map(suit => {
+  const mTilesBySuits: number[][] = ['m', 'p', 's', 'z'].map(suit => {
     const tileOfSuit = mobileTiles.filter(tile => tile.suit === suit)
     let arr = new Array(suit === 'z' ? 7 : 9).fill(0)
     tileOfSuit.forEach(tile => {
@@ -95,17 +112,15 @@ const patternStandard = (query: Query): Shape[] => {
     return arr
   })
 
-  const suitLengthsMod3: number[] = mTilesBySuits.map(suit => {
-    return suit.reduce((a, b) => a + b, 0) % 3
-  })
+  const searchResBySuits = [
+    searchSuitPatterns(mTilesBySuits[0], false),
+    searchSuitPatterns(mTilesBySuits[1], false),
+    searchSuitPatterns(mTilesBySuits[2], false),
+    searchSuitPatterns(mTilesBySuits[3], true),
+  ]
 
-  if (suitLengthsMod3.indexOf(1) !== -1 || suitLengthsMod3.filter(len => len === 2).length > 1) {
-    return []
-  }
+  console.log(cartesian(...searchResBySuits))
 
-
-  
-  console.log(mTilesBySuits)
   return []
 }
 
