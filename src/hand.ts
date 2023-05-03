@@ -75,7 +75,7 @@ interface IQuery {
   winTile: Tile
   isTsumo: boolean
   calls: Call[]
-  extra: ExtraYaku[]
+  extras: ExtraYaku[]
 }
 
 export class Query implements IQuery {
@@ -84,14 +84,32 @@ export class Query implements IQuery {
   winTile: Tile
   isTsumo: boolean
   calls: Call[]
-  extra: ExtraYaku[]
-  constructor (seat: Seat, hand: string[], winTile: Tile, isTsumo: boolean, calls: Call[], extra: ExtraYaku[]) {
+  extras: ExtraYaku[]
+  constructor (data: any) {
+    this.seat = data?.seat || Seat.UNSET
+    this.hand = data.hand ? data.hand.map((tileStr: string) => new Tile(tileStr)) : [] 
+    this.winTile = data?.winTile || null 
+    this.isTsumo = data?.isTsumo || false
+    this.calls = data?.calls || []
+    this.extras = data?.extras || []
+  }
+  setSeat(seat: Seat) {
     this.seat = seat
-    this.hand = hand.map(tileStr => new Tile(tileStr))
+  }
+  setHand(hand: Tile[]) {
+    this.hand = hand
+  }
+  setWinTile(winTile: Tile) {
     this.winTile = winTile
+  }
+  setIsTsumo(isTsumo: boolean) {
     this.isTsumo = isTsumo
+  }
+  setCalls(calls: Call[]) {
     this.calls = calls
-    this.extra = extra
+  }
+  setExtras(extras: ExtraYaku[]) {
+    this.extras = extras
   }
   mobileTiles() {
     return [...this.hand, this.winTile]
