@@ -32,13 +32,6 @@ const query4 = new Query({
   calls: [new Call(CallType.Ckan, ['1z', '1z', '1z', '1z']), new Call(CallType.Chii, ['5s', '6s', '7s'])]
 })
 
-// let suit = [0, 2, 2, 2, 2, 0, 0, 0, 0]
-// let sol = searchSuitPatterns(suit, false)
-// sol?.forEach(s => {
-//   console.log(s)
-// })
-// console.log(sol?.length)
-
 console.log(pattern13Terminals(query).map(shape => shape.groups))
 console.log(pattern7pairs(query2).map(shape => shape.groups))
 

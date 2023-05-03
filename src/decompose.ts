@@ -180,11 +180,6 @@ const patternStandard = (query: Query): Shape[] => {
   const allSol = mobileGroupsRes.flatMap((res: MobileGroup[]) => {
     let shapes: Shape[] = []
 
-    // if (suitSol.suit !== query.winTile.suit) {
-    //   return [suitSol.groups.map(group => settleMobileGroup(suitSol.suit, group, true))]
-    // }
-    // let winTileSuitGroups: Group[][] = []
-
     const groupsWithWinTile = res.filter(g => g.tileNames.includes(query.winTile.tileStr))
     const groupsWithoutWinTile = res.filter(g => !g.tileNames.includes(query.winTile.tileStr))
 
@@ -196,17 +191,15 @@ const patternStandard = (query: Query): Shape[] => {
         shape.addGroup(settleMobileGroup(groupsWithWinTile[j], true))
       }
       
-      shapes.push(shape)
-    }
-    
-    shapes.forEach(shape => {
       groupsWithoutWinTile.forEach(g => {
         shape.addGroup(settleMobileGroup(g, true))
       })
       query.calls.forEach(call => {
         shape.addGroup(settleCall(call))
       })
-    })
+      
+      shapes.push(shape)
+    }
 
     return shapes
   })
