@@ -17,10 +17,6 @@ enum GroupType {
 interface IGroup {
   groupType: GroupType
   tiles: Tile[]
-  isConcealed: () => boolean
-  isSequence: () => boolean
-  isTriplet: () => boolean
-  isKan: () => boolean
 }
 
 class Shape {
@@ -46,17 +42,17 @@ class Group implements IGroup {
   setTiles(tiles: Tile[]) {
     this.tiles = tiles
   }
-  isConcealed() {
-    return [GroupType.Csequence, GroupType.Ctriplet, GroupType.Pair, GroupType.Kokushi].includes(this.groupType)
+  static isConcealed(group: Group) {
+    return [GroupType.Csequence, GroupType.Ctriplet, GroupType.Pair, GroupType.Kokushi].includes(group.groupType)
   }
-  isSequence() {
-    return [GroupType.Csequence, GroupType.Sequence].includes(this.groupType)
+  static isSequence(group: Group) {
+    return [GroupType.Csequence, GroupType.Sequence].includes(group.groupType)
   } 
-  isTriplet() {
-    return [GroupType.Triplet, GroupType.Ctriplet, GroupType.Kan, GroupType.Ckan].includes(this.groupType)
+  static isTriplet(group: Group) {
+    return [GroupType.Triplet, GroupType.Ctriplet, GroupType.Kan, GroupType.Ckan].includes(group.groupType)
   }
-  isKan() {
-    return [GroupType.Kan, GroupType.Ckan].includes(this.groupType)
+  static isKan(group: Group) {
+    return [GroupType.Kan, GroupType.Ckan].includes(group.groupType)
   }
 }
 

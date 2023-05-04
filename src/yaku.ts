@@ -73,7 +73,7 @@ export const evaluateQueryShape = (q: Query, shape: Shape): Yaku[] => {
 
   const gs = shape.groups
   const pairCount = gs.filter(g => g.groupType === GroupType.Pair).length
-  const sequenceCount = gs.filter(g => g.isSequence()).length
+  const sequenceCount = gs.filter(Group.isSequence).length
   
   /* 1.0 Trivial Patterns, and 10.2 */
   if (pairCount === 1 && sequenceCount === gs.length - 1) award(ALL_SEQUENCES)
@@ -92,22 +92,22 @@ export const evaluateQueryShape = (q: Query, shape: Shape): Yaku[] => {
   }
   
   /* 3.0 Honor Tiles */
-  if (gs.some(g => g.isTriplet() && g.tiles[0].tileStr === String(q.seat) + 'z')) award(HONOR_SEAT)
+  if (gs.some(g => Group.isTriplet(g) && g.tiles[0].tileStr === String(q.seat) + 'z')) award(HONOR_SEAT)
 
   const arrowGroups = ['5z', '6z', '7z'].map(tn => gs.find(g => g.tiles[0].suit === tn))
-  if (arrowGroups[2]?.isTriplet()) award(HONOR_CHUN)
-  if (arrowGroups[1]?.isTriplet()) award(HONOR_HATSU)
-  if (arrowGroups[0]?.isTriplet()) award(HONOR_HAKU)
+  if (arrowGroups[2] && Group.isTriplet(arrowGroups[2])) award(HONOR_CHUN)
+  if (arrowGroups[1] && Group.isTriplet(arrowGroups[1])) award(HONOR_HATSU)
+  if (arrowGroups[0] && Group.isTriplet(arrowGroups[0])) award(HONOR_HAKU)
   if (
-    arrowGroups.filter(g => g?.isTriplet()).length === 2 
-    && arrowGroups.some(g => g?.groupType === GroupType.Pair)
+    arrowGroups.filter(g => g && Group.isTriplet(g)).length === 2 
+    && arrowGroups.some(g => g && g!.groupType === GroupType.Pair)
   ) award(SMALL_THREE_DRAGON)
-  if (arrowGroups.every(g => g?.isTriplet())) award(BIG_THREE_DRAGON) 
+  if (arrowGroups.every(g => g && Group.isTriplet(g))) award(BIG_THREE_DRAGON) 
   
   const windGroups = ['1z', '2z', '3z', '4z'].map(tn => 
     gs.find(g => g.tiles[0].suit === tn) 
   )
-  const windTripletsCnt = windGroups.filter(g => g?.isTriplet()).length
+  const windTripletsCnt = windGroups.filter(g => g && Group.isTriplet(g)).length
   
   if (windGroups.some(g => g?.groupType === GroupType.Pair)) {
     if (windTripletsCnt === 2) award(SMALL_THREE_WINDS)
@@ -120,22 +120,22 @@ export const evaluateQueryShape = (q: Query, shape: Shape): Yaku[] => {
   if (q.allTiles().every(t => t.suit === 'z')) award(ALL_HONORS)
 
   /* 4.0 Triplet and Kong */
-  const tripletCount = gs.filter(g => g.isTriplet()).length
+  const tripletCount = gs.filter(Group.isTriplet).length
   if (pairCount === 1 && tripletCount === gs.length - 1) award(ALL_TRIPLETS)
 
-  const concealedTrippletsCnt = gs.filter(g => g.isConcealed() && g.isTriplet()).length
+  const concealedTrippletsCnt = gs.filter(Group.isConcealed).filter(Group.isTriplet).length
   if (concealedTrippletsCnt === 2) award(TWO_CONCEALED_TRIPLETS)
   if (concealedTrippletsCnt === 3) award(THREE_CONCEALED_TRIPLETS)
   if (concealedTrippletsCnt === 4) award(FOUR_CONCEALED_TRIPLETS)
 
-  const kongCnt = gs.filter(g => g.isKan()).length
+  const kongCnt = gs.filter(Group.isKan).length
   if (kongCnt === 1) award(ONE_KONG)
   if (kongCnt === 2) award(TWO_KONG)
   if (kongCnt === 3) award(THREE_KONG)
   if (kongCnt === 4) award(FOUR_KONG)
 
   /* 5.0 Identical sequences */
-  const sequencesFirstTiles = gs.filter(g => g.isSequence()).map(g => g.tiles[0])
+  const sequencesFirstTiles = gs.filter(Group.isSequence).map(g => g.tiles[0])
   if (sequenceCount >= 2){
     const identicalSequenceCnts = sequencesFirstTiles.map(t => 
       sequencesFirstTiles.filter(t2 => t.equals(t2)).length
@@ -161,7 +161,7 @@ export const evaluateQueryShape = (q: Query, shape: Shape): Yaku[] => {
     })) award(NINE_TILE_STRAIGHT)
   }
 
-  const tripletsTiles = gs.filter(g => g.isTriplet()).map(g => g.tiles[0])
+  const tripletsTiles = gs.filter(Group.isTriplet).map(g => g.tiles[0])
   const pairTile = gs.find(g => g.groupType === GroupType.Pair)?.tiles[0]
   if (pairTile && PLAIN_SUITS.includes(pairTile!.suit)) {
     const other2Suits = PLAIN_SUITS.filter(suit => suit !== pairTile.suit)
