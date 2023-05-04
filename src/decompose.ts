@@ -1,6 +1,6 @@
-import { Query, Tile, Call, CallType } from "./hand.ts";
+import { Query, Tile, Call } from "./hand.ts";
 import { SuitSolution, searchSuitPatterns, MobileGroup, MobileGroupType } from "./suitSearch.ts";
-import { TERMINALS, SUITS } from "./constants.ts";
+import { TERMINALS, SUITS, CallType } from "./constants.ts";
 
 enum GroupType {
   UNSET = 0,

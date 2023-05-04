@@ -1,6 +1,6 @@
 import { Group, GroupType, Shape } from "./decompose"
 import { Query } from "./hand"
-import { TERMINALS, RANKS } from "./constants"
+import { TERMINALS, RANKS, ExtraYaku, PLAIN_SUITS } from "./constants"
 
 class Yaku {
   cat: string
@@ -42,10 +42,10 @@ const ONE_KONG = new Yaku('4.3.1', 5)
 const TWO_KONG = new Yaku('4.3.2', 20)
 const THREE_KONG = new Yaku('4.3.3', 120)
 const FOUR_KONG = new Yaku('4.3.4', 480)
-const TWO_IDENTICAL_SETS = new Yaku('5.1.1', 10)
-const TWO_IDENTICAL_SETS_TWICE = new Yaku('5.1.2', 60)
-const THREE_IDENTICAL_SETS = new Yaku('5.1.3', 120)
-const FOUR_IDENTICAL_SETS = new Yaku('5.1.4', 480)
+const TWO_IDENTICAL_SEQUENCES = new Yaku('5.1.1', 10)
+const TWO_IDENTICAL_SEQUENCES_TWICE = new Yaku('5.1.2', 60)
+const THREE_IDENTICAL_SEQUENCES = new Yaku('5.1.3', 120)
+const FOUR_IDENTICAL_SEQUENCES = new Yaku('5.1.4', 480)
 const THREE_SIMILAR_SEQUENCES = new Yaku('6.1', 35)
 const SMALL_THREE_SIMILAR_TRIPLETS = new Yaku('6.2.1', 30)
 const BIG_THREE_SIMILAR_TRIPLETS = new Yaku('6.2.2', 120)
@@ -65,7 +65,7 @@ const BLESSING_OF_EARTH = new Yaku('9.1.6', 155)
 const THIRDTEEN_TERMINALS = new Yaku('10.1', 160)
 const SEVEN_PAIRS = new Yaku('10.2', 30)
 
-const evaluateQueryShape = (q: Query, shape: Shape): Yaku[] => {
+export const evaluateQueryShape = (q: Query, shape: Shape): Yaku[] => {
   let yakus: Yaku[] = []
   const award = (yaku: Yaku) => {
     yakus.push(yaku)
@@ -74,20 +74,20 @@ const evaluateQueryShape = (q: Query, shape: Shape): Yaku[] => {
   const gs = shape.groups
   const pairCount = gs.filter(g => g.groupType === GroupType.Pair).length
   const sequenceCount = gs.filter(g => g.isSequence()).length
-  const tripletCount = gs.filter(g => g.isTriplet()).length
   
-  /* 1.0 Trivial Patterns */
+  /* 1.0 Trivial Patterns, and 10.2 */
   if (pairCount === 1 && sequenceCount === gs.length - 1) award(ALL_SEQUENCES)
   if (pairCount === 1 && q.isConcealed()) award(CONCEALED_HAND)
   if (!q.allTiles().some(tile => tile.isMemberOf(TERMINALS))) award(NO_TERMINALS)
+  if (pairCount === gs.length) award(SEVEN_PAIRS)
   
   /* 2.0 One-Suit Patterns */
   const plainCnts = ['m', 'p', 's'].map(suit => 
     q.allTiles().filter(t => t.suit === suit).length
   )
-  const honorCnts = q.allTiles().filter(t => t.suit === 'z').length
+  const isPure = q.allTiles().every(t => t.suit !== 'z')
   if(plainCnts.filter(cnt => cnt === 0).length === 2) {
-    award(honorCnts === 0 ? PURE_ONE_SUIT : MIXED_ONE_SUIT)
+    award(isPure ? PURE_ONE_SUIT : MIXED_ONE_SUIT)
     if (q.hand.map(tile => tile.rank).sort().join('') === "1112345678999") award(NINE_GATES)
   }
   
@@ -120,6 +120,7 @@ const evaluateQueryShape = (q: Query, shape: Shape): Yaku[] => {
   if (q.allTiles().every(t => t.suit === 'z')) award(ALL_HONORS)
 
   /* 4.0 Triplet and Kong */
+  const tripletCount = gs.filter(g => g.isTriplet()).length
   if (pairCount === 1 && tripletCount === gs.length - 1) award(ALL_TRIPLETS)
 
   const concealedTrippletsCnt = gs.filter(g => g.isConcealed() && g.isTriplet()).length
@@ -133,10 +134,78 @@ const evaluateQueryShape = (q: Query, shape: Shape): Yaku[] => {
   if (kongCnt === 3) award(THREE_KONG)
   if (kongCnt === 4) award(FOUR_KONG)
 
+  /* 5.0 Identical sequences */
+  const sequencesFirstTiles = gs.filter(g => g.isSequence()).map(g => g.tiles[0])
+  if (sequenceCount >= 2){
+    const identicalSequenceCnts = sequencesFirstTiles.map(t => 
+      sequencesFirstTiles.filter(t2 => t.equals(t2)).length
+    )
+    if (identicalSequenceCnts.filter(cnt => cnt === 2).length === 2) award(TWO_IDENTICAL_SEQUENCES)
+    if (identicalSequenceCnts.filter(cnt => cnt === 2).length === 4) award(TWO_IDENTICAL_SEQUENCES_TWICE)
+    if (identicalSequenceCnts.some(cnt => cnt === 3)) award(THREE_IDENTICAL_SEQUENCES)
+    if (identicalSequenceCnts.some(cnt => cnt === 4)) award(FOUR_IDENTICAL_SEQUENCES)
+  }
+
+  /* 6.0 Similar sets, and 7.0 Consecutive sets */
+  if (sequenceCount >= 3) {
+    for (let i = 0; i < RANKS.length - 2; i++) {
+      if (PLAIN_SUITS.every(suit => 
+        sequencesFirstTiles.some(tile => tile.tileStr === RANKS[i] + suit)
+      )) award(THREE_SIMILAR_SEQUENCES) 
+    }
+
+    if (PLAIN_SUITS.some(suit => {
+      ["1", "4", "7"].every(rank => {
+        sequencesFirstTiles.some(tile => tile.tileStr === rank + suit)
+      })
+    })) award(NINE_TILE_STRAIGHT)
+  }
+
+  const tripletsTiles = gs.filter(g => g.isTriplet()).map(g => g.tiles[0])
+  const pairTile = gs.find(g => g.groupType === GroupType.Pair)?.tiles[0]
+  if (pairTile && PLAIN_SUITS.includes(pairTile!.suit)) {
+    const other2Suits = PLAIN_SUITS.filter(suit => suit !== pairTile.suit)
+    if (other2Suits.every(suit => tripletsTiles.some(tile => tile.tileStr === pairTile.rank + suit))) {
+      award(SMALL_THREE_SIMILAR_TRIPLETS)
+    }
+  }
   
-  /* 10.0 Irregular Hands */
-  if (gs.some(g => g.groupType === GroupType.Kokushi)) award(THIRDTEEN_TERMINALS)
-  if (gs.every(g => g.groupType === GroupType.Pair)) award(SEVEN_PAIRS)
+  if (tripletCount >= 3) {
+    if(RANKS.some(rank => 
+      PLAIN_SUITS.every(suit => tripletsTiles.some(tile => tile.tileStr === rank + suit))
+    )) award (BIG_THREE_SIMILAR_TRIPLETS)
+
+    PLAIN_SUITS.forEach(suit => {
+      const suitTripplets = RANKS.map(rank => tripletsTiles.some(tile => tile.tileStr === rank + suit))
+      let max = 0
+      let current = 0
+      for (let i = 0; i < suitTripplets.length; i++) {
+        current = suitTripplets[i] ? 0 : current + 1
+        max = Math.max(current, max)
+      }
+      if (max === 3) award(THREE_CONSECUTIVE_TRIPLETS)
+      if (max === 4) award(FOUR_CONSECUTIVE_TRIPLETS)
+    })
+  }
+
+  /* 8.0 Terminals, and 10.1 */
+  if (!gs.some(g => g.groupType === GroupType.Kokushi)) {
+    if (q.allTiles().every(tile => tile.isMemberOf(TERMINALS))){
+      award(isPure ? PURE_GREATER_TERMINALS : MIXED_GREATER_TERMINALS)
+    } else if (gs.every(g => g.tiles.some(t => t.isMemberOf(TERMINALS)))) {
+      award(isPure ? PURE_LESSER_TERMINALS : MIXED_LESSER_TERMINALS)
+    }
+  } else {
+    award(THIRDTEEN_TERMINALS)
+  }
+
+  /* 9.0 Incidental bonuses */
+  if (q.extras.includes(ExtraYaku.FINAL_DRAW)) award(FINAL_DRAW)
+  if (q.extras.includes(ExtraYaku.FINAL_DISCARD)) award(FINAL_DISCARD)
+  if (q.extras.includes(ExtraYaku.WIN_ON_A_KONG)) award(WIN_ON_KONG)
+  if (q.extras.includes(ExtraYaku.ROBBING_A_KONG)) award(ROBBING_A_KONG)
+  if (q.extras.includes(ExtraYaku.BLESSING_OF_HEAVEN)) award(BLESsING_OF_HEAVEN)
+  if (q.extras.includes(ExtraYaku.BLESSING_OF_EARTH)) award(BLESSING_OF_EARTH)
 
   return yakus
 }
