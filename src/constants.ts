@@ -6,8 +6,8 @@ const HONORS = ['1z', '2z', '3z', '4z', '5z', '6z', '7z']
 const TERMINALS = [...TERMINALS19, ...HONORS]
 
 const RANKS: string[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-const SUITS = ['m', 'p', 's', 'z']
-const PLAIN_SUITS = ['m', 'p', 's']
+const SUITS: string[] = ['m', 'p', 's', 'z']
+const PLAIN_SUITS: string[] = ['m', 'p', 's']
 
 enum Seat {
   UNSET = 0,

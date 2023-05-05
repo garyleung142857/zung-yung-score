@@ -1,4 +1,4 @@
-import { Tile, Call } from "./src/hand";
+import { Call } from "./src/call";
 import { Query } from "./src/query";
 import { CallType } from "./src/constants";
 

@@ -60,13 +60,13 @@ const FINAL_DRAW = new Yaku('9.1.1', 10)
 const FINAL_DISCARD = new Yaku('9.1.2', 10)
 const WIN_ON_KONG = new Yaku('9.1.3', 10)
 const ROBBING_A_KONG = new Yaku('9.1.4', 10)
-const BLESsING_OF_HEAVEN = new Yaku('9.1.5', 155)
+const BLESSING_OF_HEAVEN = new Yaku('9.1.5', 155)
 const BLESSING_OF_EARTH = new Yaku('9.1.6', 155)
 const THIRDTEEN_TERMINALS = new Yaku('10.1', 160)
 const SEVEN_PAIRS = new Yaku('10.2', 30)
 
 const evaluateQueryShape = (q: Query, gs: Group[]): Yaku[] => {
-  let yakus: Yaku[] = []
+  const yakus: Yaku[] = []
   const award = (yaku: Yaku) => {
     yakus.push(yaku)
   }
@@ -178,8 +178,8 @@ const evaluateQueryShape = (q: Query, gs: Group[]): Yaku[] => {
       const suitTripplets = RANKS.map(rank => tripletsTiles.some(tile => tile.tileStr === rank + suit))
       let max = 0
       let current = 0
-      for (let i = 0; i < suitTripplets.length; i++) {
-        current = suitTripplets[i] ? 0 : current + 1
+      for (const hasTripplet of suitTripplets) {
+        current = hasTripplet ? 0 : current + 1
         max = Math.max(current, max)
       }
       if (max === 3) award(THREE_CONSECUTIVE_TRIPLETS)
@@ -203,7 +203,7 @@ const evaluateQueryShape = (q: Query, gs: Group[]): Yaku[] => {
   if (q.extras.includes(ExtraYaku.FINAL_DISCARD)) award(FINAL_DISCARD)
   if (q.extras.includes(ExtraYaku.WIN_ON_A_KONG)) award(WIN_ON_KONG)
   if (q.extras.includes(ExtraYaku.ROBBING_A_KONG)) award(ROBBING_A_KONG)
-  if (q.extras.includes(ExtraYaku.BLESSING_OF_HEAVEN)) award(BLESsING_OF_HEAVEN)
+  if (q.extras.includes(ExtraYaku.BLESSING_OF_HEAVEN)) award(BLESSING_OF_HEAVEN)
   if (q.extras.includes(ExtraYaku.BLESSING_OF_EARTH)) award(BLESSING_OF_EARTH)
 
   return yakus

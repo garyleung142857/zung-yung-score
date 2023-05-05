@@ -1,6 +1,7 @@
-import { Tile, Call } from "./hand.ts";
+import { Call } from "./call.ts";
+import { Tile } from "./tile.ts";
 import { Query } from "./query.ts";
-import { SuitSolution, searchSuitPatterns, MobileGroup, MobileGroupType } from "./suitSearch.ts";
+import { searchSuitPatterns, MobileGroup, MobileGroupType } from "./suitSearch.ts";
 import { TERMINALS, SUITS, CallType, GroupType } from "./constants.ts";
 
 
@@ -40,7 +41,7 @@ const pattern13Terminals = (query: Query): Group[][] => {
   // check if the Query can win with 13 terminals
   const mobileTiles = query.mobileTiles()
   if (mobileTiles.length !== 14) return []
-  for (let terminal of TERMINALS) {
+  for (const terminal of TERMINALS) {
     if (mobileTiles.find(tile => tile.tileStr === terminal) === undefined) {
       return []
     }
@@ -50,9 +51,9 @@ const pattern13Terminals = (query: Query): Group[][] => {
 }
 
 const pattern7pairs = (query: Query): Group[][] => {
-  let mobileTiles = query.mobileTiles()
+  const mobileTiles = query.mobileTiles()
   if (mobileTiles.length !== 14) return []
-  let groups = []
+  const groups = []
   while (mobileTiles.length > 0) {
     const t = mobileTiles.pop()
     const idx = mobileTiles.findIndex(tile => tile.equals(t!))
@@ -64,11 +65,11 @@ const pattern7pairs = (query: Query): Group[][] => {
 }
 
 function cartesian(...args: any) {
-  let r: any[] = []
-  let max = args.length - 1
+  const r: any[] = []
+  const max = args.length - 1
   function helper(arr: any[], i: number) {
     for (let j = 0, l = args[i].length; j < l; j++) {
-      var a = arr.slice(0); // clone arr
+      const a = arr.slice(0); // clone arr
       a.push(args[i][j])
       if (i === max) r.push(a);
       else helper(a, i + 1)
@@ -79,11 +80,11 @@ function cartesian(...args: any) {
 }
 
 const patternStandard = (query: Query): Group[][] => {
-  let mobileTiles = query.mobileTiles()
+  const mobileTiles = query.mobileTiles()
   if (mobileTiles.length + query.calls.length * 3 !== 14) return []
   const mTilesBySuits: number[][] = SUITS.map(suit => {
     const tileOfSuit = mobileTiles.filter(tile => tile.suit === suit)
-    let arr = new Array(suit === 'z' ? 7 : 9).fill(0)
+    const arr = new Array(suit === 'z' ? 7 : 9).fill(0)
     tileOfSuit.forEach(tile => {
       const idx = Number(tile.rank) - 1
       arr[idx] += 1
@@ -97,20 +98,19 @@ const patternStandard = (query: Query): Group[][] => {
     searchSuitPatterns(mTilesBySuits[1], 'p'),
     searchSuitPatterns(mTilesBySuits[2], 's'),
     searchSuitPatterns(mTilesBySuits[3], 'z'),
-  ).map(suitSolutions => suitSolutions.flatMap(
-    (suitSolution: SuitSolution) => suitSolution.groups
-  ))
+  ).map((suitSolutions: MobileGroup[][]) => suitSolutions.flat(1))
 
   // exhaust patterns with awareness on winning tile and calls
-  let patterns: Group[][] = []
+  const patterns: Group[][] = []
 
   const settleMobileGroup = (mg: MobileGroup, closed: boolean = true): Group => {
-    let group = new Group()
+    const group = new Group()
 
     switch (mg.type) {
       case MobileGroupType.Pair:
         group.setTiles([new Tile(mg.tileNames[0]), new Tile(mg.tileNames[0])])
         group.setGroupType(GroupType.Pair)
+        // if we want to implement Riichi Mahjong fu calculation, add a new grouptype
         break
       case MobileGroupType.Triplet:
         group.setTiles([new Tile(mg.tileNames[0]), new Tile(mg.tileNames[0]), new Tile(mg.tileNames[0])])
@@ -119,13 +119,14 @@ const patternStandard = (query: Query): Group[][] => {
       case MobileGroupType.Sequence:
         group.setTiles([new Tile(mg.tileNames[0]), new Tile(mg.tileNames[1]), new Tile(mg.tileNames[2])])
         group.setGroupType(closed ? GroupType.Csequence : GroupType.Sequence)
+        // if we want to implement Riichi Mahjong fu calculation, add a new grouptype
     }
 
     return group
   }
 
   const settleCall = (call: Call): Group => {
-    let group = new Group()
+    const group = new Group()
     group.setTiles(call.tiles)
 
     switch (call.callType) {
@@ -147,13 +148,13 @@ const patternStandard = (query: Query): Group[][] => {
   }
 
   const allSol = mobileGroupsRes.flatMap((res: MobileGroup[]) => {
-    let shapes: Group[][] = []
+    const shapes: Group[][] = []
 
     const groupsWithWinTile = res.filter(g => g.tileNames.includes(query.winTile.tileStr))
     const groupsWithoutWinTile = res.filter(g => !g.tileNames.includes(query.winTile.tileStr))
 
     for (let i = 0; i < groupsWithWinTile.length; i++) {
-      let shape: Group[] = []
+      const shape: Group[] = []
       shape.push(settleMobileGroup(groupsWithWinTile[i], query.isTsumo))
       for (let j = 0; j < groupsWithWinTile.length; j++) {
         if (i === j) continue
@@ -166,10 +167,8 @@ const patternStandard = (query: Query): Group[][] => {
       query.calls.forEach(call => {
         shape.push(settleCall(call))
       })
-      
       shapes.push(shape)
     }
-
     return shapes
   })
 
