@@ -19,16 +19,6 @@ interface IGroup {
   tiles: Tile[]
 }
 
-class Shape {
-  groups: Group[]
-  constructor(groups: Group[] = []){
-    this.groups = groups
-  }
-  addGroup(group: Group) {
-    this.groups.push(group)
-  }
-}
-
 class Group implements IGroup {
   groupType: GroupType
   tiles: Tile[]
@@ -56,20 +46,20 @@ class Group implements IGroup {
   }
 }
 
-const pattern13Terminals = (query: Query): Shape[] => {
+const pattern13Terminals = (query: Query): Group[][] => {
   // check if the Query can win with 13 terminals
   const mobileTiles = query.mobileTiles()
   if (mobileTiles.length !== 14) return []
   for (let terminal of TERMINALS) {
-    if (mobileTiles.find(tile => tile.equals(terminal)) === undefined) {
+    if (mobileTiles.find(tile => tile.tileStr === terminal) === undefined) {
       return []
     }
   }
   const group = new Group(GroupType.Kokushi, mobileTiles)
-  return [new Shape([group])]
+  return [[group]]
 }
 
-const pattern7pairs = (query: Query): Shape[] => {
+const pattern7pairs = (query: Query): Group[][] => {
   let mobileTiles = query.mobileTiles()
   if (mobileTiles.length !== 14) return []
   let groups = []
@@ -80,7 +70,7 @@ const pattern7pairs = (query: Query): Shape[] => {
     groups.push(new Group(GroupType.Pair, [t!, t!]))
     mobileTiles.splice(idx, 1)
   }
-  return [new Shape(groups)]
+  return [groups]
 }
 
 function cartesian(...args: any) {
@@ -98,7 +88,7 @@ function cartesian(...args: any) {
   return r
 }
 
-const patternStandard = (query: Query): Shape[] => {
+const patternStandard = (query: Query): Group[][] => {
   let mobileTiles = query.mobileTiles()
   if (mobileTiles.length + query.calls.length * 3 !== 14) return []
   const mTilesBySuits: number[][] = SUITS.map(suit => {
@@ -122,7 +112,7 @@ const patternStandard = (query: Query): Shape[] => {
   ))
 
   // exhaust patterns with awareness on winning tile and calls
-  let patterns: Shape[] = []
+  let patterns: Group[][] = []
 
   const settleMobileGroup = (mg: MobileGroup, closed: boolean = true): Group => {
     let group = new Group()
@@ -167,24 +157,24 @@ const patternStandard = (query: Query): Shape[] => {
   }
 
   const allSol = mobileGroupsRes.flatMap((res: MobileGroup[]) => {
-    let shapes: Shape[] = []
+    let shapes: Group[][] = []
 
     const groupsWithWinTile = res.filter(g => g.tileNames.includes(query.winTile.tileStr))
     const groupsWithoutWinTile = res.filter(g => !g.tileNames.includes(query.winTile.tileStr))
 
     for (let i = 0; i < groupsWithWinTile.length; i++) {
-      let shape = new Shape()
-      shape.addGroup(settleMobileGroup(groupsWithWinTile[i], query.isTsumo))
+      let shape: Group[] = []
+      shape.push(settleMobileGroup(groupsWithWinTile[i], query.isTsumo))
       for (let j = 0; j < groupsWithWinTile.length; j++) {
         if (i === j) continue
-        shape.addGroup(settleMobileGroup(groupsWithWinTile[j], true))
+        shape.push(settleMobileGroup(groupsWithWinTile[j], true))
       }
       
       groupsWithoutWinTile.forEach(g => {
-        shape.addGroup(settleMobileGroup(g, true))
+        shape.push(settleMobileGroup(g, true))
       })
       query.calls.forEach(call => {
-        shape.addGroup(settleCall(call))
+        shape.push(settleCall(call))
       })
       
       shapes.push(shape)
@@ -196,7 +186,7 @@ const patternStandard = (query: Query): Shape[] => {
   return allSol
 }
 
-const patternAll = (query: Query): Shape[] => {
+const patternAll = (query: Query): Group[][] => {
   return [pattern13Terminals, pattern7pairs, patternStandard].flatMap(func => func(query))
 }
 
@@ -205,7 +195,6 @@ export {
   pattern7pairs,
   patternStandard,
   patternAll,
-  Shape,
   Group,
   GroupType
 }

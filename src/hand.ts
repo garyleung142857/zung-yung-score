@@ -21,8 +21,8 @@ export class Tile implements ITile {
   equals(other: Tile) {
     return this.tileStr === other.tileStr
   }
-  isMemberOf(tiles: Tile[]) {
-    return tiles.find(t => t.equals(this)) === undefined
+  isMemberOf(tiles: string[]) {
+    return tiles.find(t => t === this.tileStr) !== undefined
   }
 }
 

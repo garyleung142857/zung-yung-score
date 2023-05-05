@@ -1,4 +1,4 @@
-import { Group, GroupType, Shape } from "./decompose"
+import { Group, GroupType } from "./decompose"
 import { Query } from "./hand"
 import { TERMINALS, RANKS, ExtraYaku, PLAIN_SUITS } from "./constants"
 
@@ -65,13 +65,12 @@ const BLESSING_OF_EARTH = new Yaku('9.1.6', 155)
 const THIRDTEEN_TERMINALS = new Yaku('10.1', 160)
 const SEVEN_PAIRS = new Yaku('10.2', 30)
 
-export const evaluateQueryShape = (q: Query, shape: Shape): Yaku[] => {
+export const evaluateQueryShape = (q: Query, gs: Group[]): Yaku[] => {
   let yakus: Yaku[] = []
   const award = (yaku: Yaku) => {
     yakus.push(yaku)
   }
 
-  const gs = shape.groups
   const pairCount = gs.filter(g => g.groupType === GroupType.Pair).length
   const sequenceCount = gs.filter(Group.isSequence).length
   
