@@ -1,18 +1,18 @@
 import { Group, GroupType } from "./decompose"
-import { Query } from "./hand"
-import { TERMINALS, RANKS, ExtraYaku, PLAIN_SUITS } from "./constants"
+import { Query } from "./query"
+import { TERMINALS, RANKS, ExtraYaku, PLAIN_SUITS, CallType } from "./constants"
 
 class Yaku {
   cat: string
-  value: number
+  score: number
   superior: string[]
   constructor(
     cat: string,
-    value: number,
+    score: number,
     superior: string[] = []
   ) {
     this.cat = cat
-    this.value = value
+    this.score = score
     this.superior = superior
   }
 }
@@ -65,7 +65,7 @@ const BLESSING_OF_EARTH = new Yaku('9.1.6', 155)
 const THIRDTEEN_TERMINALS = new Yaku('10.1', 160)
 const SEVEN_PAIRS = new Yaku('10.2', 30)
 
-export const evaluateQueryShape = (q: Query, gs: Group[]): Yaku[] => {
+const evaluateQueryShape = (q: Query, gs: Group[]): Yaku[] => {
   let yakus: Yaku[] = []
   const award = (yaku: Yaku) => {
     yakus.push(yaku)
@@ -76,7 +76,7 @@ export const evaluateQueryShape = (q: Query, gs: Group[]): Yaku[] => {
   
   /* 1.0 Trivial Patterns, and 10.2 */
   if (pairCount === 1 && sequenceCount === gs.length - 1) award(ALL_SEQUENCES)
-  if (pairCount === 1 && q.isConcealed()) award(CONCEALED_HAND)
+  if (pairCount === 1 && q.calls.filter(call => call.callType !== CallType.Ckan)) award(CONCEALED_HAND)
   if (!q.allTiles().some(tile => tile.isMemberOf(TERMINALS))) award(NO_TERMINALS)
   if (pairCount === gs.length) award(SEVEN_PAIRS)
   
@@ -207,4 +207,9 @@ export const evaluateQueryShape = (q: Query, gs: Group[]): Yaku[] => {
   if (q.extras.includes(ExtraYaku.BLESSING_OF_EARTH)) award(BLESSING_OF_EARTH)
 
   return yakus
+}
+
+export {
+  Yaku,
+  evaluateQueryShape
 }

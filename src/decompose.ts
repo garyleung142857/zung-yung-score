@@ -1,18 +1,8 @@
-import { Query, Tile, Call } from "./hand.ts";
+import { Tile, Call } from "./hand.ts";
+import { Query } from "./query.ts";
 import { SuitSolution, searchSuitPatterns, MobileGroup, MobileGroupType } from "./suitSearch.ts";
-import { TERMINALS, SUITS, CallType } from "./constants.ts";
+import { TERMINALS, SUITS, CallType, GroupType } from "./constants.ts";
 
-enum GroupType {
-  UNSET = 0,
-  Sequence = 3,
-  Triplet = 4,
-  Kan = 5,
-  Ckan = 6,
-  Csequence = 7, // concealed sequence
-  Ctriplet = 8, // concealed triplet
-  Pair = 9,
-  Kokushi = 10
-}
 
 interface IGroup {
   groupType: GroupType

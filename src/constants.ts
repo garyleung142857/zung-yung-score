@@ -1,3 +1,6 @@
+type Suit = 'm' | 'p' | 's' | 'z'
+type Rank = '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+
 const TERMINALS19 = ['1m', '9m', '1p', '9p', '1s', '9s']
 const HONORS = ['1z', '2z', '3z', '4z', '5z', '6z', '7z']
 const TERMINALS = [...TERMINALS19, ...HONORS]
@@ -32,7 +35,21 @@ enum CallType {
   Ckan = 6  // concealed kan
 }
 
+enum GroupType {
+  UNSET = 0,
+  Sequence = 3,
+  Triplet = 4,
+  Kan = 5,
+  Ckan = 6,
+  Csequence = 7, // concealed sequence
+  Ctriplet = 8, // concealed triplet
+  Pair = 9,
+  Kokushi = 10
+}
+
 export {
+  Suit,
+  Rank,
   TERMINALS19,
   HONORS,
   TERMINALS,
@@ -41,5 +58,6 @@ export {
   PLAIN_SUITS,
   Seat,
   ExtraYaku,
-  CallType
+  CallType,
+  GroupType
 }
