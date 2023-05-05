@@ -2,14 +2,18 @@
   "name": "zung-jung-score",
   "version": "1.0.0",
   "description": "Calculate scores of winning hands for zung-jung mahjong.",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "lint": "tslint -p tsconfig.json",
+    "lintfix": "tslint --fix -p tsconfig.json  "
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "jest": "^29.5.0",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
     "typescript": "^5.0.4"
   }
 }
